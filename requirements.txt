@@ -1,10 +1,4 @@
-crewai==1.10.1
-crewai-tools
-langchain
-langchain-core
-langchain-community
-langchain-cohere
+litellm
 python-dotenv
 cohere
-litellm
 streamlit

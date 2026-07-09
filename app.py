@@ -1,8 +1,6 @@
 import os
-import sys
 import litellm
 from dotenv import load_dotenv
-from crewai import Agent, LLM, Task, Crew, Process
 
 load_dotenv()
 
@@ -18,150 +16,62 @@ def _patched_completion(*args, **kwargs):
 
 litellm.completion = _patched_completion
 
+AGENTS = {
+    "Project Manager": "You are an experienced IT Project Manager with 15+ years of experience. Convert client ideas into clear project plans with requirements, modules, workflow, and deliverables. Max 300 words.",
+    "Software Architect": "You are a Senior Software Architect. Design complete software architecture including technology stack (frontend, backend, database, auth, deployment), folder structure, and explain technology choices.",
+    "Full-Stack Developer": "You are a skilled Full-Stack Developer. Create detailed development plans covering database schema, REST API endpoints, authentication, frontend pages/components/routing, and step-by-step development.",
+    "QA Engineer": "You are a Quality Assurance expert. Review the entire solution and provide strengths/weaknesses, security improvements, performance suggestions, testing strategy, deployment tips, and overall quality assessment.",
+}
+
+TASK_TEMPLATES = [
+    "The client wants: {input}\n\nCreate a concise project plan covering:\n- Project goal and scope\n- Main modules/features\n- Functional and non-functional requirements\n- High-level workflow\n- Deliverables",
+    "Based on the previous plan, design the software architecture. Include:\n- Technology stack (frontend, backend, database, auth, deployment)\n- Folder structure\n- Explanation of technology choices",
+    "Based on the architecture, create a detailed development plan. Include:\n- Database tables/schema\n- REST API endpoints and business logic\n- Authentication mechanism\n- Frontend pages, components, routing, UI/UX\n- Development steps",
+    "Review the entire solution (plan, architecture, development plan). Provide:\n- Strengths and weaknesses\n- Security and performance improvements\n- Testing strategy\n- Deployment suggestions\n- Overall quality assessment",
+]
+
 
 def run_crew(problem_statement: str, status_callback=None) -> str:
-    """Run the CrewAI pipeline and return the result."""
+    COHERE_API_KEY = os.getenv("COHERE_API_KEY")
+    if not COHERE_API_KEY:
+        raise ValueError("COHERE_API_KEY not found!")
 
     def log(msg):
         if status_callback:
             status_callback(msg)
+
+    agent_names = list(AGENTS.keys())
+    context = ""
+
+    for i, (name, system_prompt) in enumerate(AGENTS.items()):
+        log(f"[{i+1}/4] {name} is working...")
+
+        task = TASK_TEMPLATES[i].format(input=problem_statement) if i == 0 else TASK_TEMPLATES[i]
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+        ]
+        if context:
+            messages.append({"role": "user", "content": f"Previous work:\n\n{context}\n\nNow complete this task:\n{task}"})
         else:
-            print(msg, flush=True)
+            messages.append({"role": "user", "content": task})
 
-    COHERE_API_KEY = os.getenv("COHERE_API_KEY")
-    if not COHERE_API_KEY:
-        raise ValueError("COHERE_API_KEY not found in .env file!")
+        response = litellm.completion(
+            model="cohere/command-r-08-2024",
+            api_key=COHERE_API_KEY,
+            messages=messages,
+            temperature=0.3,
+        )
 
-    log("[1/4] Initializing AI agents...")
+        context = response.choices[0].message.content
 
-    llm = LLM(
-        model="cohere/command-r-08-2024",
-        api_key=COHERE_API_KEY,
-        temperature=0.3
-    )
-
-    project_manager = Agent(
-        role="Project Manager",
-        goal="Manage the software project, gather requirements, create a plan, and prepare final documentation.",
-        backstory="You are an experienced IT Project Manager with 15+ years of experience.",
-        llm=llm,
-        allow_delegation=False,
-        memory=False,
-        verbose=True
-    )
-
-    software_architect = Agent(
-        role="Software Architect",
-        goal="Design the complete software architecture, select technologies, and define system structure.",
-        backstory="You are a Senior Software Architect.",
-        llm=llm,
-        allow_delegation=False,
-        memory=False,
-        verbose=True
-    )
-
-    developer = Agent(
-        role="Full-Stack Developer",
-        goal="Build both the backend and frontend of the application.",
-        backstory="You are a skilled Full-Stack Developer.",
-        llm=llm,
-        allow_delegation=False,
-        memory=False,
-        verbose=True
-    )
-
-    qa_engineer = Agent(
-        role="QA Engineer",
-        goal="Review the entire solution, identify issues, and suggest improvements.",
-        backstory="You are a Quality Assurance expert.",
-        llm=llm,
-        allow_delegation=False,
-        memory=False,
-        verbose=True
-    )
-
-    log("[2/4] Creating tasks...")
-
-    planning_task = Task(
-        description=f"""
-        The client wants: {problem_statement}
-        Create a concise project plan (max 300 words) covering:
-        - Project goal and scope
-        - Main modules / features
-        - Functional and non-functional requirements
-        - High-level workflow
-        - Deliverables
-        """,
-        expected_output="A professional software project plan with clear requirements.",
-        agent=project_manager
-    )
-
-    architecture_task = Task(
-        description="""
-        Based on the project plan provided, design the software architecture.
-        Include:
-        - Technology stack (frontend, backend, database, auth, deployment)
-        - Folder structure
-        - Explanation of technology choices
-        """,
-        expected_output="Complete architecture document with technology stack and structure.",
-        agent=software_architect,
-        context=[planning_task]
-    )
-
-    development_task = Task(
-        description="""
-        Based on the architecture document, create a detailed development plan covering both backend and frontend.
-        Include:
-        - Database tables / schema
-        - REST API endpoints and business logic
-        - Authentication mechanism
-        - Frontend pages, components, routing, and UI/UX
-        - Development steps
-        """,
-        expected_output="Detailed development plan covering backend and frontend.",
-        agent=developer,
-        context=[architecture_task]
-    )
-
-    qa_task = Task(
-        description="""
-        Review the entire solution (plan, architecture, development plan).
-        Provide:
-        - Strengths and weaknesses
-        - Security and performance improvements
-        - Testing strategy
-        - Deployment suggestions
-        - Overall quality assessment
-        """,
-        expected_output="Professional QA review report with actionable feedback.",
-        agent=qa_engineer,
-        context=[planning_task, architecture_task, development_task]
-    )
-
-    log("[3/4] Running 4 AI agents (this takes 1-2 minutes)...")
-
-    software_company = Crew(
-        agents=[project_manager, software_architect, developer, qa_engineer],
-        tasks=[planning_task, architecture_task, development_task, qa_task],
-        process=Process.sequential,
-        verbose=True,
-        memory=False
-    )
-
-    try:
-        result = software_company.kickoff()
-        log("[4/4] Done!")
-        return result.raw
-    except Exception as e:
-        error_msg = f"ERROR: {type(e).__name__}: {str(e)}"
-        log(error_msg)
-        raise
+    log("[4/4] Done!")
+    return context
 
 
 if __name__ == "__main__":
     problem = input("\nEnter Project Idea:\n\n")
-    print("\nExecuting Crew...\n")
+    print("\nExecuting...\n")
     try:
         output = run_crew(problem)
         print("\n" + "=" * 80)
@@ -169,7 +79,5 @@ if __name__ == "__main__":
         print("=" * 80)
         print(output)
         print("\n" + "=" * 80)
-        print("PROJECT COMPLETED SUCCESSFULLY")
-        print("=" * 80)
     except Exception as e:
         print(f"\nFAILED: {e}")
