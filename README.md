@@ -1,6 +1,19 @@
 # AI Software Company
 
-An AI-powered software planning tool that uses **4 AI agents** to create complete project plans automatically. Enter a project idea and get a professional plan covering architecture, development, and QA review.
+An AI-powered software planning tool that uses **4 AI agents** to create complete project plans automatically.
+
+## What Does This Do?
+
+You type a project idea (like "build a food delivery app"), and 4 AI agents work together to create:
+- Project goals and requirements
+- Technology recommendations
+- Database and API design
+- Frontend layout
+- Security and quality review
+
+## Live Demo
+
+**Try it now:** [Click here to use the app](https://your-app-name.streamlit.app)
 
 ## How It Works
 
@@ -23,79 +36,68 @@ Your Idea
 Complete Project Plan
 ```
 
-## Features
+## Quick Start
 
-- **4 AI Agents** working as a team (Manager, Architect, Developer, QA)
-- **Web Interface** built with Streamlit
-- **CLI Interface** for terminal users
-- **Download** your plan as a Markdown file
-- **Real-time progress** tracking
+### Run Locally (5 minutes)
 
-## Tech Stack
+1. **Get free API key** from [cohere.com](https://cohere.com)
 
-- **Python** - Core language
-- **CrewAI** - AI agent framework
-- **Cohere** - Language model (Command R)
-- **Streamlit** - Web UI
-- **LangChain** - LLM integration
-
-## Installation
-
-1. **Clone the repository**
+2. **Clone and run:**
 ```bash
 git clone https://github.com/Saikurra03/crewai-software-company.git
 cd crewai-software-company
-```
-
-2. **Install dependencies**
-```bash
 pip install -r requirements.txt
 ```
 
-3. **Set up API key**
-
-Create a `.env` file in the root folder:
+3. **Create `.env` file:**
 ```
-COHERE_API_KEY=your_api_key_here
+COHERE_API_KEY=your_key_here
 ```
 
-Get a free API key at [cohere.com](https://cohere.com)
-
-## Usage
-
-### Web Interface
+4. **Start the app:**
 ```bash
 streamlit run frontend/app.py
 ```
 
-### CLI Interface
-```bash
-python app.py
-```
+### Deploy Online (Free)
+
+1. Go to [share.streamlit.io](https://share.streamlit.io)
+2. Sign up with GitHub
+3. Click "New app" and select this repository
+4. Add your API key in Settings > Secrets
+5. Done! Share the URL with anyone.
+
+**Full instructions:** See [SETUP_GUIDE.md](SETUP_GUIDE.md)
+
+## Features
+
+- **4 AI Agents** working as a team
+- **Web Interface** with progress tracking
+- **CLI Interface** for terminal users
+- **Download** plans as Markdown files
+
+## Tech Stack
+
+- Python, CrewAI, Cohere, Streamlit, LangChain
 
 ## Project Structure
 
 ```
 crewai-software-company/
-├── app.py              # Main backend logic
+├── app.py              # Backend logic
 ├── frontend/
-│   └── app.py          # Streamlit web interface
-├── requirements.txt    # Python dependencies
-├── .gitignore          # Git ignore rules
-└── README.md           # This file
+│   └── app.py          # Web interface
+├── requirements.txt    # Dependencies
+├── SETUP_GUIDE.md      # Beginner guide
+├── .gitignore
+└── README.md
 ```
 
 ## Example
 
-**Input:**
-> Build an e-commerce website for selling handmade crafts
+**Input:** "Build an e-commerce website for handmade crafts"
 
-**Output:**
-- Project plan with goals and scope
-- Tech stack: React, Node.js, MongoDB, Docker
-- Database schema and API endpoints
-- Frontend components and routing
-- QA review with security suggestions
+**Output:** Complete plan with React, Node.js, MongoDB, Docker stack, API endpoints, database schema, and security recommendations.
 
 ## License
 
