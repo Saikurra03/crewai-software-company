@@ -1,12 +1,10 @@
-crewai==1.15.1
+crewai
 crewai-tools
 langchain
 langchain-core
 langchain-community
 langchain-cohere
-python-dotenv==1.2.2
+python-dotenv
 cohere
 litellm
 streamlit
-chromadb==0.5.23
-pydantic==2.12.5
