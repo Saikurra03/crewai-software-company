@@ -1,14 +1,5 @@
 import os
 import sys
-import types
-from unittest.mock import MagicMock
-
-for mod_name in [
-    "chromadb", "chromadb.api", "chromadb.api.client",
-    "chromadb.config", "chromadb.api.types",
-]:
-    sys.modules[mod_name] = MagicMock()
-
 import litellm
 from dotenv import load_dotenv
 from crewai import Agent, LLM, Task, Crew, Process

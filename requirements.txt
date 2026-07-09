@@ -1,4 +1,4 @@
-crewai
+crewai==1.10.1
 crewai-tools
 langchain
 langchain-core
